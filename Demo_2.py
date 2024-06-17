@@ -4,6 +4,7 @@ import numpy as np
 import mediapipe as mp
 import pickle
 import tkinter as tk
+import tkinter.filedialog as fd 
 
 from PIL import Image, ImageTk
 
@@ -166,6 +167,27 @@ class Application:
                     self.str = self.str[:-1]
                     self.panel5.config(text=self.str, font=("Courier", 30))
 
+    # Button "Save" 
+    def save_sentence(self):
+        filepath = fd.asksaveasfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt")])
+        if filepath:
+            self.save_filepath = filepath  # Store the filepath
+            with open(filepath, "w") as file:
+                file.write(self.str)
+
+    # Button "Update"
+    def update_file(self):
+        if self.str and hasattr(self, 'save_filepath'):
+            try:
+                with open(self.save_filepath, "a") as file:
+                    file.write(self.str + "\n")
+                self.clear_sentence()
+                print("Sentence appended successfully!")  # For debugging
+            except Exception as e:
+                print("Error updating file:", e)  # Handle potential errors
+        else:
+            print("Please save the sentence first or check the filepath.") 
+            
     # Button "Clear"
     def clear_sentence(self):
         self.str = ""
@@ -185,9 +207,19 @@ print("Opening...")
 # Create the application instance
 app = Application()
 
+# Design Save button
+app.save = tk.Button(app.root)
+app.save.place(x=1005, y=875)
+app.save.config(text="Save", font=("Courier", 20), wraplength=100, command=app.save_sentence)
+
+# Design Update button
+app.update = tk.Button(app.root)
+app.update.place(x=1200, y=875) 
+app.update.config(text="Update", font=("Courier", 20), wraplength=100, command=app.update_file)
+
 # Design Clear button
 app.clear = tk.Button(app.root)
-app.clear.place(x=1205, y=875)
+app.clear.place(x=1400, y=875)
 app.clear.config(text="Clear", font=("Courier", 20), wraplength=100, command=app.clear_sentence)
 
 # Bind key press events to the function

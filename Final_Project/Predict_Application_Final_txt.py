@@ -4,6 +4,7 @@ import numpy as np
 import mediapipe as mp
 import pickle
 import tkinter as tk
+import tkinter.filedialog as fd 
 
 from PIL import Image, ImageTk
 
@@ -24,7 +25,7 @@ class Application:
     def __init__(self):
         self.vs = cv2.VideoCapture(0)  # Start capturing video
         self.current_image = None
-        
+    
         # Create the main window
         self.root = tk.Tk()
         self.root.title("Sign Language")
@@ -70,9 +71,13 @@ class Application:
         # Variables for storing text and predictions
         self.str = ""
         self.word = ""
-        self.current_symbol = "Empty"
-        self.photo = "Empty"
-   
+        self.current_symbol = ""
+        self.photo = ""
+
+        # Add a flag to track if file is saved
+        self.file_saved = False  
+        self.first_save = False
+        
         # Start the video loop
         self.video_loop()
 
@@ -166,6 +171,38 @@ class Application:
                     self.str = self.str[:-1]
                     self.panel5.config(text=self.str, font=("Courier", 30))
 
+    # Button "Save" 
+    def save_sentence(self):
+        filepath = fd.asksaveasfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt")])
+        if filepath:
+            self.save_filepath = filepath
+            with open(filepath, "w") as file:
+                file.write(self.str)
+            self.file_saved = True  
+            self.update.config(state=tk.NORMAL)
+            self.str = ""  # Clear the sentence after saving
+            self.panel5.config(text=self.str, font=("Courier", 30))  # Update the Sentence label
+        self.first_save = True
+
+    # Button "Update"
+    def update_file(self):
+        if self.file_saved and self.str:
+            try:
+                with open(self.save_filepath, "a") as file:
+                    # Append newline ONLY if it's NOT the first save
+                    if not self.first_save:
+                        file.write("\n")
+                    file.write(self.str) 
+
+                self.clear_sentence()
+                print("Sentence appended successfully!")
+
+                # Reset the first_save flag after updating
+                self.first_save = False  
+            except Exception as e:
+                print("Error updating file:", e)
+
+            
     # Button "Clear"
     def clear_sentence(self):
         self.str = ""
@@ -185,9 +222,19 @@ print("Opening...")
 # Create the application instance
 app = Application()
 
+# Design Save button
+app.save = tk.Button(app.root)
+app.save.place(x=1005, y=875)
+app.save.config(text="Save", font=("Courier", 20), wraplength=100, command=app.save_sentence)
+
+# Design Update button 
+app.update = tk.Button(app.root)
+app.update.place(x=1200, y=875) 
+app.update.config(text="Update", font=("Courier", 20), wraplength=100, command=app.update_file, state=tk.DISABLED) # Initially disable the Update button
+
 # Design Clear button
 app.clear = tk.Button(app.root)
-app.clear.place(x=1205, y=875)
+app.clear.place(x=1400, y=875)
 app.clear.config(text="Clear", font=("Courier", 20), wraplength=100, command=app.clear_sentence)
 
 # Bind key press events to the function
